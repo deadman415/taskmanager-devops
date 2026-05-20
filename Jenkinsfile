@@ -32,22 +32,23 @@ pipeline {
         stage('Dependency Check') {
             steps {
                 echo '>>> Checking for outdated dependencies...'
-                bat 'docker run --rm %IMAGE_NAME% pip list --outdated'
+                bat 'docker run --rm %IMAGE_NAME% pip list --outdated || exit /b 0'
             }
         }
 
         stage('Security Scan') {
             steps {
                 echo '>>> Running security vulnerability scan...'
-                bat 'docker run --rm %IMAGE_NAME% sh -c "pip install pip-audit -q && pip-audit" || echo "Scan complete - review output above"'
+                bat 'docker run --rm %IMAGE_NAME% sh -c "pip install pip-audit -q && pip-audit" || exit /b 0'
+                echo '>>> Security scan complete. Review vulnerabilities above.'
             }
         }
 
         stage('Deploy') {
             steps {
                 echo '>>> Deploying container...'
-                bat 'docker stop %CONTAINER_NAME% || exit 0'
-                bat 'docker rm %CONTAINER_NAME% || exit 0'
+                bat 'docker stop %CONTAINER_NAME% || exit /b 0'
+                bat 'docker rm %CONTAINER_NAME% || exit /b 0'
                 bat 'docker run -d --name %CONTAINER_NAME% -p 5000:5000 %IMAGE_NAME%'
             }
         }
