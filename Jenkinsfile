@@ -31,11 +31,29 @@ pipeline {
             }
         }
 
-        stage('Dependency Check') {
+        stage('Dependency Check (OWASP)') {
             steps {
-                echo '>>> Checking for outdated/insecure dependencies...'
+                echo '>>> Running OWASP Dependency Check...'
+                dependencyCheck additionalArguments: '''
+                    --scan ./backend
+                    --format HTML
+                    --format XML
+                    --out ./dependency-check-report
+                ''', odcInstallation: 'OWASP-DC'
+            }
+            post {
+                always {
+                    dependencyCheckPublisher pattern: 'dependency-check-report/dependency-check-report.xml'
+                }
+            }
+        }
+
+        stage('Security Scan') {
+            steps {
+                echo '>>> Running security vulnerability scan...'
                 bat '''
-                    docker run --rm %IMAGE_NAME% pip list --outdated
+                    docker run --rm %IMAGE_NAME% pip install safety
+                    docker run --rm %IMAGE_NAME% safety check
                 '''
             }
         }
