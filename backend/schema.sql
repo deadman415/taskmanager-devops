@@ -1,4 +1,4 @@
--- Run this in MySQL Workbench first!
+- Run this in MySQL Workbench first!
 
 CREATE DATABASE IF NOT EXISTS taskmanager;
 USE taskmanager;

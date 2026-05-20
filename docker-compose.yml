@@ -1,0 +1,35 @@
+version: "3.8"
+
+services:
+
+  # ── MySQL Database ──────────────────────────────────────────────────────────
+  db:
+    image: mysql:8.0
+    container_name: taskmanager-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: taskmanager
+    ports:
+      - "3307:3306"       # 3307 on host → 3306 in container (avoids conflict with local MySQL)
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./backend/schema.sql:/docker-entrypoint-initdb.d/schema.sql  # auto-runs on first start
+
+  # ── Flask Backend ───────────────────────────────────────────────────────────
+  backend:
+    build: ./backend
+    container_name: taskmanager-backend
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      DB_HOST: db
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: taskmanager
+    depends_on:
+      - db
+
+volumes:
+  db_data:
