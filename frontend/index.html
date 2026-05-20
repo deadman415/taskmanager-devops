@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Task Manager</title>
+
+  <!-- React & Babel via CDN (no npm/build needed) -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+    :root {
+      --bg:        #0d0f14;
+      --surface:   #161a24;
+      --card:      #1e2333;
+      --border:    #2a3049;
+      --accent:    #4f8ef7;
+      --accent2:   #7c5df9;
+      --green:     #34d399;
+      --red:       #f87171;
+      --text:      #e2e8f0;
+      --muted:     #64748b;
+      --radius:    12px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    /* ── Header ── */
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .header h1 {
+      font-family: 'Space Mono', monospace;
+      font-size: 2.2rem;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -1px;
+    }
+    .header p {
+      color: var(--muted);
+      margin-top: 6px;
+      font-size: 0.95rem;
+    }
+
+    /* ── Layout ── */
+    .container { max-width: 700px; margin: 0 auto; }
+
+    /* ── Add Task Form ── */
+    .form-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 28px;
+    }
+    .form-card h2 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--muted);
+      margin-bottom: 16px;
+      font-family: 'Space Mono', monospace;
+    }
+    .form-row { display: flex; flex-direction: column; gap: 12px; }
+    input, textarea {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      padding: 12px 16px;
+      transition: border 0.2s;
+      outline: none;
+      resize: none;
+    }
+    input:focus, textarea:focus { border-color: var(--accent); }
+    textarea { height: 72px; }
+
+    .btn {
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      padding: 12px 20px;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      width: 100%;
+      margin-top: 4px;
+    }
+    .btn-primary:hover { opacity: 0.88; }
+
+    /* ── Stats Bar ── */
+    .stats {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .stat-chip {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 0.82rem;
+      padding: 6px 14px;
+      color: var(--muted);
+    }
+    .stat-chip span { color: var(--text); font-weight: 600; margin-right: 4px; }
+
+    /* ── Task List ── */
+    .task-list { display: flex; flex-direction: column; gap: 12px; }
+
+    .task-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      transition: border-color 0.2s, background 0.2s;
+      animation: slideIn 0.25s ease;
+    }
+    .task-card:hover { border-color: var(--accent); }
+    .task-card.done { opacity: 0.55; }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Checkbox */
+    .checkbox {
+      width: 22px; height: 22px; min-width: 22px;
+      border-radius: 6px;
+      border: 2px solid var(--border);
+      background: var(--card);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+      margin-top: 2px;
+    }
+    .checkbox.checked {
+      background: var(--green);
+      border-color: var(--green);
+      color: #fff;
+    }
+    .checkbox svg { width: 13px; height: 13px; }
+
+    .task-body { flex: 1; }
+    .task-title {
+      font-weight: 600;
+      font-size: 1rem;
+      margin-bottom: 4px;
+    }
+    .task-card.done .task-title { text-decoration: line-through; }
+    .task-desc { color: var(--muted); font-size: 0.87rem; line-height: 1.5; }
+
+    .task-meta {
+      display: flex; align-items: center; gap: 10px;
+      margin-top: 10px;
+    }
+    .badge {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      text-transform: uppercase;
+    }
+    .badge.pending  { background: rgba(79,142,247,0.15); color: var(--accent); }
+    .badge.completed { background: rgba(52,211,153,0.15); color: var(--green); }
+
+    .btn-icon {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.8rem;
+      padding: 5px 10px;
+      transition: all 0.2s;
+    }
+    .btn-icon:hover { background: rgba(248,113,113,0.1); border-color: var(--red); color: var(--red); }
+
+    /* ── Empty State ── */
+    .empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+    .empty .icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .empty p { font-size: 0.95rem; }
+
+    /* ── Error banner ── */
+    .error-banner {
+      background: rgba(248,113,113,0.1);
+      border: 1px solid var(--red);
+      border-radius: 8px;
+      color: var(--red);
+      font-size: 0.85rem;
+      margin-bottom: 16px;
+      padding: 10px 16px;
+    }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const API = "http://localhost:5000";
+
+function App() {
+  const [tasks,   setTasks]   = React.useState([]);
+  const [title,   setTitle]   = React.useState("");
+  const [desc,    setDesc]    = React.useState("");
+  const [loading, setLoading] = React.useState(true);
+  const [error,   setError]   = React.useState("");
+
+  // ── Fetch all tasks ──────────────────────────────────────────────────────
+  const fetchTasks = async () => {
+    try {
+      const res = await fetch(`${API}/tasks`);
+      const data = await res.json();
+      setTasks(data);
+      setError("");
+    } catch {
+      setError("Cannot connect to the Flask server. Make sure app.py is running on port 5000.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  React.useEffect(() => { fetchTasks(); }, []);
+
+  // ── Add task ─────────────────────────────────────────────────────────────
+  const addTask = async () => {
+    if (!title.trim()) return;
+    await fetch(`${API}/tasks`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title, description: desc })
+    });
+    setTitle(""); setDesc("");
+    fetchTasks();
+  };
+
+  // ── Toggle status ────────────────────────────────────────────────────────
+  const toggleTask = async (id) => {
+    await fetch(`${API}/tasks/${id}`, { method: "PUT" });
+    fetchTasks();
+  };
+
+  // ── Delete task ──────────────────────────────────────────────────────────
+  const deleteTask = async (id) => {
+    await fetch(`${API}/tasks/${id}`, { method: "DELETE" });
+    fetchTasks();
+  };
+
+  const total     = tasks.length;
+  const completed = tasks.filter(t => t.status === "completed").length;
+  const pending   = total - completed;
+
+  return (
+    <div className="container">
+      <div className="header">
+        <h1>⬡ Task Manager</h1>
+        <p>Full-stack app · React + Flask + MySQL</p>
+      </div>
+
+      {/* Error Banner */}
+      {error && <div className="error-banner">⚠ {error}</div>}
+
+      {/* Add Task Form */}
+      <div className="form-card">
+        <h2>// New Task</h2>
+        <div className="form-row">
+          <input
+            placeholder="Task title *"
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && addTask()}
+          />
+          <textarea
+            placeholder="Description (optional)"
+            value={desc}
+            onChange={e => setDesc(e.target.value)}
+          />
+          <button className="btn btn-primary" onClick={addTask}>
+            + Add Task
+          </button>
+        </div>
+      </div>
+
+      {/* Stats */}
+      {total > 0 && (
+        <div className="stats">
+          <div className="stat-chip"><span>{total}</span> Total</div>
+          <div className="stat-chip"><span>{pending}</span> Pending</div>
+          <div className="stat-chip"><span>{completed}</span> Done</div>
+        </div>
+      )}
+
+      {/* Task List */}
+      <div className="task-list">
+        {loading && <p style={{color:"var(--muted)", textAlign:"center"}}>Loading tasks...</p>}
+
+        {!loading && tasks.length === 0 && !error && (
+          <div className="empty">
+            <div className="icon">📋</div>
+            <p>No tasks yet. Add one above!</p>
+          </div>
+        )}
+
+        {tasks.map(task => (
+          <div key={task.id} className={`task-card ${task.status === "completed" ? "done" : ""}`}>
+            {/* Checkbox */}
+            <div
+              className={`checkbox ${task.status === "completed" ? "checked" : ""}`}
+              onClick={() => toggleTask(task.id)}
+            >
+              {task.status === "completed" && (
+                <svg viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M2 6l3 3 5-5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              )}
+            </div>
+
+            {/* Content */}
+            <div className="task-body">
+              <div className="task-title">{task.title}</div>
+              {task.desc && <div className="task-desc">{task.desc}</div>}
+              <div className="task-meta">
+                <span className={`badge ${task.status}`}>{task.status}</span>
+                <button className="btn-icon" onClick={() => deleteTask(task.id)}>✕ Delete</button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
