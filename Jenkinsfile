@@ -40,20 +40,23 @@ pipeline {
             steps {
                 echo '>>> Running security vulnerability scan...'
                 bat 'docker run --rm %IMAGE_NAME% sh -c "pip install pip-audit -q && pip-audit" || exit /b 0'
-                echo '>>> Security scan complete. Review vulnerabilities above.'
+                echo '>>> Security scan complete.'
             }
         }
 
-        stage('Deploy') {
+        stage('SonarQube Analysis') {
             steps {
-                echo '>>> Deploying container...'
-                bat 'docker stop %CONTAINER_NAME% || exit /b 0'
-                bat 'docker rm %CONTAINER_NAME% || exit /b 0'
-                bat 'docker run -d --name %CONTAINER_NAME% -p 5000:5000 %IMAGE_NAME%'
+                withSonarQubeEnv('SonarQube') {
+                    bat '''
+                        sonar-scanner ^
+                        -Dsonar.projectKey=taskmanager-backend ^
+                        -Dsonar.sources=./backend ^
+                        -Dsonar.host.url=http://localhost:9000
+                    '''
+                }
             }
         }
 
-    }
 
     post {
         success {
