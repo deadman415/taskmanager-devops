@@ -54,12 +54,13 @@ pipeline {
                             \"${scannerHome}\\bin\\sonar-scanner.bat\" ^
                             -Dsonar.projectKey=taskmanager-backend ^
                             -Dsonar.sources=./backend ^
-                            -Dsonar.host.url=http://localhost:9000
+                            -Dsonar.host.url=http://localhost:9000 ^
+                            -Dsonar.token=squ_f67e90bc30a5fcb0fe859614fa43d18f2a098365
                         """
                     }
                 }
             }
-        }
+}
 
         stage('Deploy') {
             steps {
