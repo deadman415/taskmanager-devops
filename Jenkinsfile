@@ -47,12 +47,10 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
-                    bat '''
-                        sonar-scanner ^
-                        -Dsonar.projectKey=taskmanager-backend ^
-                        -Dsonar.sources=./backend ^
-                        -Dsonar.host.url=http://localhost:9000
-                    '''
+                    script {
+                        def scannerHome = tool 'SonarScanner'
+                        bat "\"${scannerHome}\\bin\\sonar-scanner.bat\" -Dsonar.projectKey=taskmanager-backend -Dsonar.sources=./backend -Dsonar.host.url=http://localhost:9000"
+                    }
                 }
             }
         }
