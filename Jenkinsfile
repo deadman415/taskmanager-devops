@@ -57,10 +57,20 @@ pipeline {
             }
         }
 
+        stage('Deploy') {
+            steps {
+                echo '>>> Deploying container...'
+                bat 'docker stop %CONTAINER_NAME% || exit /b 0'
+                bat 'docker rm %CONTAINER_NAME% || exit /b 0'
+                bat 'docker run -d --name %CONTAINER_NAME% -p 5000:5000 %IMAGE_NAME%'
+            }
+        }
+
+    }
 
     post {
         success {
-            echo '>>> Pipeline completed successfully! App is running.'
+            echo '>>> Pipeline completed successfully!'
         }
         failure {
             echo '>>> Pipeline failed. Check logs above.'
