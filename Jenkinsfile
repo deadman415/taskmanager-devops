@@ -49,10 +49,13 @@ pipeline {
                 withSonarQubeEnv('SonarQube') {
                     script {
                         def scannerHome = tool 'SonarScanner'
-                        def javaHome = tool 'JDK'
-                        withEnv(["JAVA_HOME=${javaHome}", "PATH+JAVA=${javaHome}\\bin"]) {
-                            bat "\"${scannerHome}\\bin\\sonar-scanner.bat\" -Dsonar.projectKey=taskmanager-backend -Dsonar.sources=./backend -Dsonar.host.url=http://localhost:9000"
-                        }
+                        bat """
+                            set JAVA_HOME=
+                            \"${scannerHome}\\bin\\sonar-scanner.bat\" ^
+                            -Dsonar.projectKey=taskmanager-backend ^
+                            -Dsonar.sources=./backend ^
+                            -Dsonar.host.url=http://localhost:9000
+                        """
                     }
                 }
             }
